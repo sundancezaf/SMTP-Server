@@ -2,27 +2,14 @@
 1. A basic ubuntu vm will do
 2. Click on the project name, then click on "Access"
 3. Open the console
-4. Generate the SSH key in local host
+4. Generate an SSH key in your local host
 5. Add the public SSH key to the "AuthorizedKeys" file in the DigitalOcean VM
-6. Log in with "root@your-IP"
-7. Note the public IP for this domain
-If having trouble with SSH, check out the section in "Troubleshooting" at the end of this guide.
+6. Log in to your new droplet with "root@your-IP"
+7. Note the public IP for this host
 
 **Create Local Users for Testing**
 1. Create additional users that will be used to test authorization: `sudo adduser testuser`
 
-**Setting up the domain to link to your smtp server**
-
-Set the hostname:
-```
-sudo hostnamectl set-hostname mail.yourdomain.com
-sudo nano /etc/hosts
-```
-The `/etc/hosts` should look like:
-```
-127.0.0.1   localhost
-127.0.1.1   mail.yourdomain.com mail
-```
 ### 2. Get the Domain
 1. Go to a domain provider like namecheap and get some domain for like $1
 2. Set up the DNS like below:
@@ -36,6 +23,17 @@ The `/etc/hosts` should look like:
 Make sure the priority is "10" for the MX record.
 Check that the records are being propagated correctly by searching it in: `https://www.whatsmydns.net/`
 
+**Setting up the domain to link to your smtp server**
+Back in the droplet,set the hostname:
+```bash
+sudo hostnamectl set-hostname mail.yourdomain.com
+sudo nano /etc/hosts
+```
+The `/etc/hosts` should look like:
+```bash
+127.0.0.1   localhost
+127.0.1.1   mail.yourdomain.com mail
+```
 ### 3. Setting up Sendmail
 1. **Install the sendmail server**
 ```bash
@@ -46,30 +44,29 @@ sudo apt install sendmail sendmail-bin -y
 makemap hash /etc/mail/local-host-names < /etc/mail/local-host-names
 ```
 3. **Accept mail from external sources**
-Changed this line to accept connections from any host to the server:
-```
+Change this line to accept connections from any host to the server:
+```bash
 DAEMON_OPTIONS(`Port=smtp,Addr=127.0.0.1, Name=MTA')dnl
 ```
 to
-```
+```bash
 DAEMON_OPTIONS(`Port=25, Name=MTA')dnl
 ```
 4, Then deploy the configuration and restart the service:
-```
-sudo m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
-sudo systemctl restart sendmail
+```bash
+sudo m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf && systemctl restart sendmail
 ```
 5. Check that sendmail is listening on Port 25:
-```
+```bash
 sudo netstat -tuln | grep :25
 ```
 6. It should say that it's status is LISTEN. For further checks, do:
-```
+```bash
 sudo lsof -i :25
 ```
 This should show that sendmail is using port 25.
 7. Try connecting to it with telnet from an external host, example:
-```
+```bash
 telnet your-domain 25
 ```
 8. Run the 'EHLO example.com' to test the server is up and running
