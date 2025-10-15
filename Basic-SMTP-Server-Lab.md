@@ -20,16 +20,18 @@
 | A Record  | @                   | DigitalOcean IP     | Automatic |
 | A Record  | mail.yourdomain.com | DigitalOcean IP     | Automatic |
 | MX Record | @                   | mail.yourdomain.com | Automatic |
+
 Make sure the priority is "10" for the MX record.
 Check that the records are being propagated correctly by searching it in: `https://www.whatsmydns.net/`
 
 **Setting up the domain to link to your smtp server**
-Back in the droplet,set the hostname:
+
+1. Back in the droplet,set the hostname:
 ```bash
 sudo hostnamectl set-hostname mail.yourdomain.com
 sudo nano /etc/hosts
 ```
-The `/etc/hosts` should look like:
+2. The `/etc/hosts` should look like:
 ```bash
 127.0.0.1   localhost
 127.0.1.1   mail.yourdomain.com mail
