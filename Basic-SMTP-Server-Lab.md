@@ -1,19 +1,23 @@
-### 1. Create the DigitalOcean Droplet
-1. A basic ubuntu vm will do
-2. Click on the project name, then click on "Access"
-3. Open the console
-4. Generate an SSH key in your local host
-5. Add the public SSH key to the "AuthorizedKeys" file in the DigitalOcean VM
-6. Log in to your new droplet with "root@your-IP"
-7. Note the public IP for this host
+## Domain and Basic Sendmail Configuration
+Any cloud provider and a basic vm will do the job. The following directions are for DigitalOcean.
+### 1. Create a DigitalOcean Droplet
+1. Create a new project
+2. On the left-hand side, click on "Droplets" and then click "Create Droplet"
+3. Choose your region
+4. Choose a basic Ubuntu vm
+5. Then choose the latest version and the most basic options
+6. For the Authentication Method, if you don't already have an ssh key in your local host, generate a new one and add it here.
+7. Finalize all the other details
+8. After your droplet has been created, note the public IP for the droplet.
+9. Now in your local host you can log in to your new droplet with "root@digitalOcean-droplet-IP"
 
 **Create Local Users for Testing**
-1. Create additional users that will be used to test authorization: `sudo adduser testuser`
+
+Create additional users that will be used to test authorization: `sudo adduser testuser`
 
 ### 2. Get the Domain
-1. Go to a domain provider like namecheap and get some domain for like $1
-2. Set up the DNS like below:
-	1. The MX record is for your mail server
+1. Go to a domain provider like namecheap and get a domain, the cheapest one will do.
+	Set up the DNS like below (The MX record is for your mail server):
 
 | Type      | Host                | Value               | TTL       |
 | --------- | ------------------- | ------------------- | --------- |
@@ -26,12 +30,12 @@ Check that the records are being propagated correctly by searching it in: `https
 
 **Setting up the domain to link to your smtp server**
 
-1. Back in the droplet,set the hostname:
+2. Back in the droplet,set the hostname:
 ```bash
 sudo hostnamectl set-hostname mail.yourdomain.com
 sudo nano /etc/hosts
 ```
-2. The `/etc/hosts` should look like:
+3. The `/etc/hosts` should look like:
 ```bash
 127.0.0.1   localhost
 127.0.1.1   mail.yourdomain.com mail
@@ -72,13 +76,17 @@ This should show that sendmail is using port 25.
 telnet your-domain 25
 ```
 8. Run the 'EHLO example.com' to test the server is up and running
-9. Update the configuration so that messages are queued and released by an admin before they can be delivered:
+
+## Updating Sendmail Configuration to Use Mail Queue
+The following updates enable the queue so that messages are not automatically delivered. Instead, the messages are placed in the queue and are "released" by an admin.
+
+1. Update the configuration so that messages are queued and released by an admin before they can be delivered:
 ```bash
 define(`confQUEUE_LA', `12')dnl
 define(`confQUEUE_DIR', `/var/spool/mqueue')dnl
 define(`confDELIVERY_MODE', `queue')dnl
 ```
-10. Add some of those users to a group that will have access to release the queue:
+2. Add some of those users to a group that will have access to release the queue:
 ```bash
 #create a group
 sudo groupadd mailqueue
@@ -93,5 +101,12 @@ groups theUsername
 sudo chown root:mailqueue /var/spool/mqueue
 sudo chmod 750 /var/spool/mqueue
 ```
+
+3. Refresh the configuration and restart the Sendmail service to ensure new configuration is applied
+```bash
+sudo m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf && systemctl restart sendmail
+```
+
+
 
 The `sendmail-basic-queue.mc` configuration is a simple configuration that will make all incoming emails be queued and not released until an administrator releases the messages. Additional configurations will be added in the following months.

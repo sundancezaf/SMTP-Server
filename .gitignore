@@ -1,0 +1,6 @@
+/wireshark
+wireshark*
+wireshark/
+*pcap
+.pcap*
+*.pcap
